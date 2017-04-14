@@ -73,8 +73,6 @@ LRESULT WINAPI ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
             void *init = GetProcAddress(LoadLibrary("atl"), "AtlAxWinInit");
             _asm call init;
 
-			ShowCursor(0);
-
             hBrowser = CreateWindow(
                 "AtlAxWin",
                 "Shell.Explorer.2",
@@ -103,6 +101,22 @@ LRESULT WINAPI ScreenSaverProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
         case WM_DESTROY:
             pWB.Release();
             break;
+
+        case WM_PARENTNOTIFY:
+        {
+            switch(LOWORD(wParam))
+            {
+                /* when clicked mouse button, webbrowser will notify parent window
+                 * so let DefScreenSaverProc to handle these messages
+                 * otherwise screensaver will not exit when mouse clicked */
+                case WM_LBUTTONDOWN:
+                case WM_RBUTTONDOWN:
+                case WM_MBUTTONDOWN:
+                    return DefScreenSaverProc(hWnd, wParam, wParam, lParam);
+            }
+        }
+        break;
+
     }
 
     // DefScreenSaverProc processes any messages ignored by ScreenSaverProc
